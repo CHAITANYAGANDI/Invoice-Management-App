@@ -5,11 +5,14 @@ import org.example.invoicemanagement.dto.InvoiceRequestDTO;
 import org.example.invoicemanagement.dto.InvoiceResponseDTO;
 import org.example.invoicemanagement.enums.InvoiceStatus;
 import org.example.invoicemanagement.service.InvoiceService;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -96,4 +99,24 @@ public class InvoiceController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/filter")
+    public ResponseEntity<Page<InvoiceResponseDTO>> filterInvoices(
+
+            @RequestParam(required = false) InvoiceStatus status,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir){
+
+
+        Page<InvoiceResponseDTO> filteredInvoices = invoiceService.filterInvoices(
+                status,clientId,fromDate,toDate,page,size,sortBy,sortDir);
+
+        return ResponseEntity.ok(filteredInvoices);
+    }
+
 }
