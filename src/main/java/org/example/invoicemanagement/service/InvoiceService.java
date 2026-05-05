@@ -124,6 +124,42 @@ public class InvoiceService {
                 .divide(BigDecimal.valueOf(100),2,RoundingMode.HALF_UP);
     }
 
+    private void updatePaymentAndStatus(Invoice invoice, BigDecimal amountPaid) {
+
+        if (amountPaid == null) {
+            throw new IllegalArgumentException("Amount paid is required");
+        }
+
+        BigDecimal normalizedAmountPaid = amountPaid.setScale(2, RoundingMode.HALF_UP);
+
+        if (normalizedAmountPaid.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount paid cannot be negative");
+        }
+
+        if (normalizedAmountPaid.compareTo(invoice.getTotalAmount()) > 0) {
+            throw new IllegalArgumentException("Amount paid cannot be greater than total amount");
+        }
+
+        BigDecimal balanceDue = invoice.getTotalAmount()
+                .subtract(normalizedAmountPaid)
+                .max(BigDecimal.ZERO)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        invoice.setAmountPaid(normalizedAmountPaid);
+        invoice.setBalanceDue(balanceDue);
+
+        if (normalizedAmountPaid.compareTo(BigDecimal.ZERO) == 0) {
+            if (invoice.getStatus() == InvoiceStatus.PAID ||
+                    invoice.getStatus() == InvoiceStatus.PARTIALLY_PAID) {
+                invoice.setStatus(InvoiceStatus.SENT);
+            }
+        } else if (normalizedAmountPaid.compareTo(invoice.getTotalAmount()) >= 0) {
+            invoice.setStatus(InvoiceStatus.PAID);
+        } else {
+            invoice.setStatus(InvoiceStatus.PARTIALLY_PAID);
+        }
+    }
+
     @Transactional
     public InvoiceResponseDTO createInvoice(InvoiceRequestDTO requestDTO){
 
@@ -222,11 +258,6 @@ public class InvoiceService {
                 .subtract(discountAmount)
                 .setScale(2,RoundingMode.HALF_UP);
 
-
-        BigDecimal balanceDue = totalAmount.subtract(invoice.getAmountPaid())
-                .setScale(2,RoundingMode.HALF_UP);
-
-
         invoice.setClient(client);
         invoice.setIssueDate(requestDTO.getIssueDate());
         invoice.setDueDate(requestDTO.getDueDate());
@@ -236,7 +267,8 @@ public class InvoiceService {
         invoice.setDiscountRate(requestDTO.getDiscountRate());
         invoice.setDiscountAmount(discountAmount);
         invoice.setTotalAmount(totalAmount);
-        invoice.setBalanceDue(balanceDue);
+
+        updatePaymentAndStatus(invoice,invoice.getAmountPaid());
 
         for(InvoiceItem item: invoiceItems){
 
@@ -308,6 +340,20 @@ public class InvoiceService {
                 .orElseThrow(()-> new InvoiceNotFoundException("Issue not found with id: "+id));
 
         invoiceRepository.delete(existingInvoice);
+
+    }
+
+    @Transactional
+    public InvoiceResponseDTO updateInvoicePaymentById(Long id, BigDecimal amountPaid){
+
+        Invoice invoice = invoiceRepository.findById(id)
+                .orElseThrow(()-> new InvoiceNotFoundException("Invoice not found with id: "+id));
+
+        updatePaymentAndStatus(invoice, amountPaid);
+
+        Invoice savedInvoice = invoiceRepository.save(invoice);
+
+        return convertToResponseDTO(savedInvoice);
 
     }
 
