@@ -391,7 +391,7 @@ public class InvoiceService {
     public InvoiceResponseDTO getInvoiceById(Long id){
 
         Invoice invoice = invoiceRepository.findById(id)
-                .orElseThrow(() -> new InvoiceNotFoundException("Invoice not found with id:"+id));
+                .orElseThrow(() -> new InvoiceNotFoundException("Invoice not found with id: "+ id));
 
 
         return convertToResponseDTO(invoice);

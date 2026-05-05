@@ -1,5 +1,7 @@
 package org.example.invoicemanagement.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.invoicemanagement.dto.InvoiceRequestDTO;
 import org.example.invoicemanagement.dto.InvoiceResponseDTO;
@@ -17,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/invoices")
+@Tag(name = "Invoices", description = "APIs for creating, updating, filtering, payment tracking, and managing invoices")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
@@ -27,6 +30,7 @@ public class InvoiceController {
 
     }
 
+    @Operation(summary = "Create a new invoice")
     @PostMapping
     public ResponseEntity<InvoiceResponseDTO> createInvoice(@Valid @RequestBody InvoiceRequestDTO requestDTO){
 
@@ -35,6 +39,8 @@ public class InvoiceController {
         return new ResponseEntity<>(createdInvoice, HttpStatus.CREATED);
     }
 
+
+    @Operation(summary = "Update invoice by ID")
     @PutMapping("/{id}")
     public ResponseEntity<InvoiceResponseDTO> updateInvoiceById(@PathVariable  Long id,@Valid @RequestBody InvoiceRequestDTO requestDTO){
 
@@ -43,6 +49,7 @@ public class InvoiceController {
         return ResponseEntity.ok(updatedInvoice);
     }
 
+    @Operation(summary = "Get all invoices")
     @GetMapping
     public ResponseEntity<List<InvoiceResponseDTO>> getAllInvoices(){
 
@@ -51,6 +58,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoices);
     }
 
+    @Operation(summary = "Get invoice by ID")
     @GetMapping("{id}")
     public ResponseEntity<InvoiceResponseDTO> getInvoiceById(@PathVariable Long id){
 
@@ -59,6 +67,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoice);
     }
 
+    @Operation(summary = "Get invoices by client ID")
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<InvoiceResponseDTO>> getInvoicesByClientId(@PathVariable Long clientId){
 
@@ -67,6 +76,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoicesByClientId);
     }
 
+    @Operation(summary = "Get invoices by status")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<InvoiceResponseDTO>> getInvoicesByStatus(@PathVariable InvoiceStatus status){
 
@@ -76,7 +86,8 @@ public class InvoiceController {
 
     }
 
-    @PutMapping("/{id}/status")
+    @Operation(summary = "Update invoice status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<InvoiceResponseDTO> updateInvoiceStatusById(@PathVariable Long id, @RequestParam InvoiceStatus status){
 
         InvoiceResponseDTO updatedInvoiceStatus = invoiceService.updateInvoiceStatusById(id, status);
@@ -84,7 +95,8 @@ public class InvoiceController {
         return ResponseEntity.ok(updatedInvoiceStatus);
     }
 
-    @PutMapping("/{id}/payment")
+    @Operation(summary = "Update invoice payment amount")
+    @PatchMapping("/{id}/payment")
     public ResponseEntity<InvoiceResponseDTO> updateInvoicePaymentById(@PathVariable Long id, @RequestParam BigDecimal amountPaid){
 
         InvoiceResponseDTO updatedInvoice = invoiceService.updateInvoicePaymentById(id,amountPaid);
@@ -92,6 +104,7 @@ public class InvoiceController {
         return ResponseEntity.ok(updatedInvoice);
     }
 
+    @Operation(summary = "Delete invoice by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInvoiceById(@PathVariable Long id){
 
@@ -100,6 +113,7 @@ public class InvoiceController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Filter invoices with pagination and sorting")
     @GetMapping("/filter")
     public ResponseEntity<Page<InvoiceResponseDTO>> filterInvoices(
 
