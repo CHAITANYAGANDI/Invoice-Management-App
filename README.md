@@ -756,4 +756,4 @@ This project demonstrates a clean Spring Boot backend with:
 - Swagger API documentation
 - Unit, controller, repository, and integration testing
 
-It is a strong backend portfolio project and a foundation for building a larger production-style monolith application.
+It is a strong backend project and a foundation for building a larger production-style monolith application.
